@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>AWS SDK for JavaScript - Browser Getting Started Application</title>
+    <link rel="stylesheet" type="text/css" href="app.css"/>
+  </head>
+
+  <body>
+    <script	src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4//jquery.min.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.845.0.min.js"></script>
+    <!-- snippet-start:[Polly.HTML.BrowserExample.config] -->
+    <script src="app-ids.js"></script>
+    <script src="app.js"></script>
+    <div class="main">
+      <fieldset>
+        <legend>Credential Information</legend>
+        <p>
+          <label for="expired">Expired</label>
+          <output id="expired">&nbsp;</output>
+        </p>
+        <p>
+          <label for="expires">Expires</label>
+          <output id="expires">&nbsp;</output>
+        </p>
+        <p>
+          <label for="account">Account</label>
+          <output id="account">&nbsp;</output>
+        </p>
+        <p>
+          <label for="role">Role</label>
+          <output id="role">&nbsp;</output>
+        </p>
+        <p>
+          <label for="refresh">Refresh Token Hash</label>
+          <output id="refresh">&nbsp;</output>
+        </p>
+        <p>
+          <output id="message">&nbsp;</output>
+        </p>
+        <button onclick="showCredentials();">Refresh</button>
+        <button onclick="goToLogin();">Login</button>
+        <button onclick="doLogout();">Logout</button>
+      </fieldset>
+    </div>
+  </body>
+</html>
+
