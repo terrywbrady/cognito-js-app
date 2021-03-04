@@ -1,5 +1,6 @@
-// Place real values in here and save ass app-ids.js
-
+/*
+ * Place real values in here and save ass app-ids.js
+ */
 var CLIENT = "xxxxxxxxxxxxxxxxxxxxxxxxxx"; //app client id
 var DOM = "https://XXXXXXXXX.auth.us-west-2.amazoncognito.com/"; // hosted ui domain id
 var REDIR = "http://localhost:8887/index.html?logged-in";

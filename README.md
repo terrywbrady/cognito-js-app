@@ -2,6 +2,8 @@
 
 ## Setup
 
+Clone this repo.
+
 ### Prepare configuration file
 Copy `app-ids.template.js` to `app-ids.js`.  As you create AWS objects, save those to app-ids.js (untracted).
 
@@ -12,8 +14,8 @@ Copy `app-ids.template.js` to `app-ids.js`.  As you create AWS objects, save tho
 - Create Cognito Application
 - Create Cognito Hosted UI to present login pages that connect to the User Pool
 
-### Deploy this repo to a web server 
+### Publish the contents of this repo from a web server 
 
-_This sample presumes localhost:8887
+_This sample presumes localhost:8887_
 
 ### Open the web page and log in

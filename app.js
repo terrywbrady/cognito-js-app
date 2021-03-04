@@ -1,11 +1,16 @@
-// The following values will be imported from app-ids.js
-//
-// var CLIENT = "xxxxxxxxxxxxxxxxxxxxxxxxxx"; //app client id
+/*
+ *The following values will be imported from app-ids.js
+ */
+
+ // var CLIENT = "xxxxxxxxxxxxxxxxxxxxxxxxxx"; //app client id
 // var DOM = "https://XXXXXXXXX.auth.us-west-2.amazoncognito.com/"; // hosted ui domain id
 // var REDIR = "http://localhost:8887/index.html?logged-in";
 // var IDPOOL = "us-west-2:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"; // cognito id pool id
 // var USERPOOL = "cognito-idp.us-west-2.amazonaws.com/us-west-2_XXXXXXXX"; // user pool id
 
+/*
+ * Values derived from the identifiers defined in app.js
+ */
 var OAUTH = DOM + "oauth2/token";
 var DOMSUFF = "?client_id=" + CLIENT + 
     "&response_type=code&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=" + 
@@ -13,9 +18,10 @@ var DOMSUFF = "?client_id=" + CLIENT +
 var LOGIN = DOM + "/login" + DOMSUFF;
 var LOGOUT = DOM + "/logout" + DOMSUFF;
 
+// Local storage key fro the refresh token
 var LS_REFRESH = 'colladmin-refresh';
 
-
+// Simple parser to pull GET parameters
 function getParams(){
   var queries = {};
   if (document.location.search == "") {
@@ -28,12 +34,16 @@ function getParams(){
   return queries;
 }
 
+// Retrieve a GET parameter or return a default value
 function getParam(name, def) {
   var p = getParams();
   return (name in p) ? p[name] : def;
 }
 
+// Display the currently active credentials for the user's session
+// Display a hash code for the refresh token
 function showCredentials() {
+  //Set output fields to &nbsp;
   $("div.main output").val('\xa0');
   showRefresh();
   AWS.config.getCredentials(function(err){
@@ -58,6 +68,10 @@ function showCredentials() {
   return false;
 }
 
+/*
+ * Refresh the AWS.config.credentials object using the id_token
+ * Save the refresh token
+ */
 function updateCredentials(data) {
   AWS.config.region = 'us-west-2'; 
   var logins = {};
@@ -72,6 +86,11 @@ function updateCredentials(data) {
   showCredentials();
 }
 
+/*
+ * Check log in state on page refresh
+ * - If a refresh token is available, use it (refresh_token grant)
+ * - If a code parameter has been passed to the page, use that (authorization_code grant) 
+ */
 function checkLogin() {
   if (!showCredentials()) {
     if ("colladmin-refresh" in localStorage) {
@@ -82,6 +101,9 @@ function checkLogin() {
   }
 }
 
+/*
+ * Perform OAUTH login using authorization_code
+ */
 function doCodeLogin() {
   var code = getParam('code', '')
   if (code == "") {
@@ -109,6 +131,9 @@ function doCodeLogin() {
 
 }
 
+/*
+ * Perform OAUTH login using refresh_token.  If this fails, check for an authorization_code.
+ */
 function doRefreshLogin() {
   $.ajax({
     dataType: "json",
@@ -134,23 +159,28 @@ function doRefreshLogin() {
 
 }
 
+// jQuery page load logic
 $(document).ready(function(){
  checkLogin();
 });
 
+// Redirect to login page
 function goToLogin() {
   document.location = LOGIN;
 }
 
+// Clear refresh token and redirect to logout page
 function doLogout() {
   localStorage.removeItem(LS_REFRESH);
   goToLogout();
 }
 
+// Redirect to logout page
 function goToLogout() {
   document.location = LOGOUT;
 }
 
+// Display a hash code of the refresh_token
 function showRefresh() {
   if (LS_REFRESH in localStorage) {
     var token = localStorage[LS_REFRESH];
