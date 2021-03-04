@@ -6,11 +6,12 @@
 // var DOM = "https://XXXXXXXXX.auth.us-west-2.amazoncognito.com/"; // hosted ui domain id
 // var REDIR = "http://localhost:8887/index.html?logged-in";
 // var IDPOOL = "us-west-2:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"; // cognito id pool id
-// var USERPOOL = "cognito-idp.us-west-2.amazonaws.com/us-west-2_XXXXXXXX"; // user pool id
+// var USERPOOL = "us-west-2_XXXXXXXX"; // user pool id
 
 /*
  * Values derived from the identifiers defined in app.js
  */
+var USERIDP = "cognito-idp.us-west-2.amazonaws.com/" + USERPOOL;
 var OAUTH = DOM + "oauth2/token";
 var DOMSUFF = "?client_id=" + CLIENT + 
     "&response_type=code&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=" + 
@@ -75,7 +76,7 @@ function showCredentials() {
 function updateCredentials(data) {
   AWS.config.region = 'us-west-2'; 
   var logins = {};
-  logins[USERPOOL] = data['id_token'];
+  logins[USERIDP] = data['id_token'];
   if ('refresh_token' in data) {
     localStorage[LS_REFRESH] = data['refresh_token'];
   }
