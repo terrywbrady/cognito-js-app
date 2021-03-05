@@ -54,16 +54,34 @@ function showCredentials() {
     } else {
       $("#expired").val(AWS.config.credentials.expired);
       $("#expires").val(AWS.config.credentials.expireTime.toLocaleString());
-      new AWS.STS().getCallerIdentity({}, function(err, data) {
-        if (err) {
-          console.log(err, err.stack); // an error occurred
-          $("#message").val(err);
+      $("#identity").val(AWS.config.credentials.data.IdentityId);
+      new AWS.STS().getCallerIdentity({}, function(err2, data) {
+        if (err2) {
+          console.log(err2, err2.stack); // an error occurred
+          $("#message").val(err2);
         } else {
           $("#account").val(data['Account']);
           $("#role").val(data['Arn'].replace(/^.*assumed-role./, ''));
           return true;
         }
       });
+      /*
+      var iparams = {IdentityId: AWS.config.credentials.data.IdentityId};
+      new AWS.CognitoIdentity().describeIdentity(iparams, function(err2, data){
+        if (err2) {
+          console.log(err2);
+        } else {
+          console.log(data);
+        }
+      });
+      new AWS.CognitoIdentity().getCredentialsForIdentity(iparams, function(err2, data){
+        if (err2) {
+          console.log(err2);
+        } else {
+          console.log(data);
+        }
+      });
+      */
     }
   });
   return false;
@@ -80,11 +98,32 @@ function updateCredentials(data) {
   if ('refresh_token' in data) {
     localStorage[LS_REFRESH] = data['refresh_token'];
   }
-  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+
+  var params = {
     IdentityPoolId: IDPOOL,
     Logins: logins,
-  });
+  };
+
+  // Get the credentials from the identity pool
+
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials(params);
+
   showCredentials();
+  
+  // Assume the credentials for WEBROLEARN1 using the id_token
+  
+  /*
+  var cred = AWS.WebIdentityCredentials({
+    RoleArn: WEBROLEARN1,
+    WebIdentityToken: data['id_token'], // token from identity service
+    RoleSessionName: 'web' // optional name, defaults to web-identity
+  });
+
+  if (cred) {
+    AWS.config.credentials = cred;
+    showCredentials();
+  }
+  */
 }
 
 /*
