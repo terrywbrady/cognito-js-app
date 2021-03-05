@@ -48,3 +48,11 @@ Copy `app-ids.template.js` to `app-ids.js`.  As you create AWS objects, save tho
 - https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-scenarios.html#scenario-basic-user-pool
 - https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-define-resource-servers.html
 - https://aws.amazon.com/blogs/mobile/understanding-amazon-cognito-user-pool-oauth-2-0-grants/
+- https://aws.amazon.com/blogs/security/new-playground-app-to-explore-web-identity-federation-with-amazon-facebook-and-google/
+
+
+Things to try
+- Add permisssions to auth role to see what I can learn about the identity object
+- Create 2 web identities, see if I can assume them when authenticated
+- Tie web identity to user pool group
+- Grant real resource access to web identity
