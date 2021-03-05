@@ -51,8 +51,31 @@ Copy `app-ids.template.js` to `app-ids.js`.  As you create AWS objects, save tho
 - https://aws.amazon.com/blogs/security/new-playground-app-to-explore-web-identity-federation-with-amazon-facebook-and-google/
 
 
-Things to try
-- Add permisssions to auth role to see what I can learn about the identity object
-- Create 2 web identities, see if I can assume them when authenticated
-- Tie web identity to user pool group
-- Grant real resource access to web identity
+## Goals
+- Current State
+  - Users are authenticated and authorized based on an application specific LDAP instance through 2 microservices
+- Phase 1
+  - Authenticate a limited number of users (CDL Staff) in a Cognito User Pool
+  - Authorize application access based on Cognito User Groups
+- Phase 2
+  - Authenticate a limited number of users (UC Staff) against UC SAML instances
+  - Authorize application access on a user by user basis using ????
+  - In the interim, an API key may be associated with LDAP permissions
+  - New web based services can be introduced (campus dashboards) that are not tied to legacy microservices
+- Phase 3
+  - Introduce a proper API (using API Gateway)
+  - Campus teams are granted API keys
+  - How does Cognito interact with this process??
+- Phase 4
+  - Migrate Merritt authentication from LDAP to Cogntio
+  - Users authenticate against UC SAML
+  - Non-UC users could use a Cognito Pool
+  - Individual users are authorized
+  - Granular LDAP permissions (collection level) could be migrated into the application
+- Questions
+  - Does this seem like a suitable Cognito use case?
+  - Does this make sense: I envision a Cognito Identity Pool that uses the following authentication providers
+    - Cognito User Pool
+    - One or more UC SAML
+  - Once authenticated via the identity pool, how do I assume an identity that can do real things in AWS?
+    - How is this mapping performed?
