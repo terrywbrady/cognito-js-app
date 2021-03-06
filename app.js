@@ -65,23 +65,6 @@ function showCredentials() {
           return true;
         }
       });
-      /*
-      var iparams = {IdentityId: AWS.config.credentials.data.IdentityId};
-      new AWS.CognitoIdentity().describeIdentity(iparams, function(err2, data){
-        if (err2) {
-          console.log(err2);
-        } else {
-          console.log(data);
-        }
-      });
-      new AWS.CognitoIdentity().getCredentialsForIdentity(iparams, function(err2, data){
-        if (err2) {
-          console.log(err2);
-        } else {
-          console.log(data);
-        }
-      });
-      */
     }
   });
   return false;
@@ -111,20 +94,22 @@ function updateCredentials(data) {
   showCredentials();
   
   // Assume the credentials for WEBROLEARN1 using the id_token
-  
-  /*
-  var cred = AWS.WebIdentityCredentials({
+
+  var wparams = {
     RoleArn: WEBROLEARN1,
     WebIdentityToken: data['id_token'], // token from identity service
     RoleSessionName: 'web' // optional name, defaults to web-identity
-  });
-
-  if (cred) {
-    AWS.config.credentials = cred;
-    showCredentials();
-  }
-  */
-}
+  };
+  
+  new AWS.STS().assumeRoleWithWebIdentity(wparams, function(err, wd){
+    if (err) {
+      console.log(err, err.stack); // an error occurred
+      $("#message").val(err);
+    } else {
+      console.log(wd);
+    }
+  })
+} 
 
 /*
  * Check log in state on page refresh
