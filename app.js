@@ -60,8 +60,9 @@ function showCredentials() {
           console.log(err2, err2.stack); // an error occurred
           $("#message").val(err2);
         } else {
+          console.log(data);
           $("#account").val(data['Account']);
-          $("#role").val(data['Arn'].replace(/^.*assumed-role./, ''));
+          $("#role").val(data['Arn']);
           return true;
         }
       });
@@ -97,16 +98,16 @@ function updateCredentials(data) {
 
   var wparams = {
     RoleArn: WEBROLEARN1,
-    WebIdentityToken: data['id_token'], // token from identity service
     RoleSessionName: 'web' // optional name, defaults to web-identity
   };
   
-  new AWS.STS().assumeRoleWithWebIdentity(wparams, function(err, wd){
+  new AWS.STS().assumeRole(wparams, function(err, wd){
     if (err) {
       console.log(err, err.stack); // an error occurred
       $("#message").val(err);
     } else {
       console.log(wd);
+      $("#assumed").val(wd.AssumedRoleUser.Arn)
     }
   })
 } 
