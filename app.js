@@ -49,7 +49,7 @@ function showCredentials() {
   showRefresh();
   AWS.config.getCredentials(function(err){
     if (err) {
-      //console.log(err.stack);
+      console.log(err.stack);
       $("#message").val(err);
     } else {
       $("#expired").val(AWS.config.credentials.expired);
@@ -63,12 +63,33 @@ function showCredentials() {
           console.log(data);
           $("#account").val(data['Account']);
           $("#role").val(data['Arn']);
+          try_s3();
           return true;
         }
       });
     }
   });
   return false;
+}
+
+function try_s3() {
+  var s3 = new AWS.S3();
+  var params = {
+    Bucket: BUCKET, 
+    Key: "hi.txt"
+  };
+  $("#s3down").text("");
+  s3.getObject(params, function(err, data) {
+    if (err) {
+      //console.log(err.stack);
+      $("#message").val(err);
+    } else {
+      var arr = data.Body.buffer;
+      var body = new TextDecoder().decode(arr);
+      console.log(body);
+      $("#s3down").text(body);
+    }
+  });
 }
 
 /*
@@ -101,15 +122,6 @@ function updateCredentials(data) {
     RoleSessionName: 'web' // optional name, defaults to web-identity
   };
   
-  new AWS.STS().assumeRole(wparams, function(err, wd){
-    if (err) {
-      console.log(err, err.stack); // an error occurred
-      $("#message").val(err);
-    } else {
-      console.log(wd);
-      $("#assumed").val(wd.AssumedRoleUser.Arn)
-    }
-  })
 } 
 
 /*

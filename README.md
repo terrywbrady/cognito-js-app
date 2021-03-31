@@ -27,12 +27,25 @@ Copy `app-ids.template.js` to `app-ids.js`.  As you create AWS objects, save tho
     - Tab: Cognito
     - User Pool Id: Use the User Pool ID created above
     - App Client id: Use the App client id created above
+    - Set `Authenticated role selection` to `Choose role from token`
   - From the Federated Identities/Sample Code tab
     - Select `Platform: JavaScript`
     - Get the `IdentityPoolId` from the sample code
     - Save this value as `IDPOOL` in app-ids.js
-- Create 2 Cognito User Groups
-  - The use of these resources is TBD
+- Create 2 or more Cognito User Groups
+  - Assign a unique Role ARN for each Group 
+- Create a Trust relationship between X and Y (**Martin**)
+  - This will allow an authenticated user to be granted the Role ARN based on their group
+
+## Net result
+- User opens page
+  - Has the unauthenticated role permission for the identity pool
+- User logs in or registers as a new user
+  - Has the authenticated role permission for the identity pool
+- User is in Group 1
+  - User has the role for Group 1
+- User is in Group 2
+  - User has the role for Group 2
 
 
 ### Open the web page and log in
@@ -50,6 +63,10 @@ Copy `app-ids.template.js` to `app-ids.js`.  As you create AWS objects, save tho
 - https://aws.amazon.com/blogs/mobile/understanding-amazon-cognito-user-pool-oauth-2-0-grants/
 - https://aws.amazon.com/blogs/security/new-playground-app-to-explore-web-identity-federation-with-amazon-facebook-and-google/
 
+## Resources 3/31
+- https://aws.amazon.com/blogs/aws/new-amazon-cognito-groups-and-fine-grained-role-based-access-control-2/
+- https://docs.aws.amazon.com/cognito/latest/developerguide/role-based-access-control.html
+- Note permissions assigned through trust relationships
 
 ## Goals
 - Current State

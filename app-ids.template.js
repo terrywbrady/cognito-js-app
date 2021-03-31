@@ -11,3 +11,5 @@ var USERPOOL = "us-west-2_XXXXXXXX"; // user pool id
 
 var WEBROLEARN1 = "";
 var WEBROLEARN2 = "";
+
+var BUCKET = "...";
