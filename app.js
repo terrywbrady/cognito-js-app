@@ -22,6 +22,12 @@ var LOGOUT = DOM + "/logout" + DOMSUFF;
 // Local storage key fro the refresh token
 var LS_REFRESH = 'colladmin-refresh';
 
+// jQuery page load logic
+$(document).ready(function(){
+  checkLogin();
+ });
+ 
+
 // Simple parser to pull GET parameters
 function getParams(){
   var queries = {};
@@ -43,14 +49,19 @@ function getParam(name, def) {
 
 // Display the currently active credentials for the user's session
 // Display a hash code for the refresh token
-function showCredentials() {
+function showCredentials(attempt) {
   //Set output fields to &nbsp;
   $("div.main output").val('\xa0');
   showRefresh();
   AWS.config.getCredentials(function(err){
     if (err) {
-      console.log(err.stack);
-      $("#message").val(err);
+      console.log(err.message);
+      console.log("Attempt: " + attempt);
+      if (attempt < 5) {
+        setTimeout(function(){showCredentials(attempt + 1)}, 1000);
+      } else {
+        $("#message").val(err);
+      }
     } else {
       $("#expired").val(AWS.config.credentials.expired);
       $("#expires").val(AWS.config.credentials.expireTime.toLocaleString());
@@ -64,12 +75,10 @@ function showCredentials() {
           $("#account").val(data['Account']);
           $("#role").val(data['Arn']);
           try_s3();
-          return true;
         }
       });
     }
   });
-  return false;
 }
 
 function try_s3() {
@@ -82,7 +91,7 @@ function try_s3() {
   s3.getObject(params, function(err, data) {
     if (err) {
       //console.log(err.stack);
-      $("#message").val(err);
+      $("#message").val(err + " accessing S3 content");
     } else {
       var arr = data.Body.buffer;
       var body = new TextDecoder().decode(arr);
@@ -112,15 +121,6 @@ function updateCredentials(data) {
   // Get the credentials from the identity pool
 
   AWS.config.credentials = new AWS.CognitoIdentityCredentials(params);
-
-  showCredentials();
-  
-  // Assume the credentials for WEBROLEARN1 using the id_token
-
-  var wparams = {
-    RoleArn: WEBROLEARN1,
-    RoleSessionName: 'web' // optional name, defaults to web-identity
-  };
   
 } 
 
@@ -130,23 +130,25 @@ function updateCredentials(data) {
  * - If a code parameter has been passed to the page, use that (authorization_code grant) 
  */
 function checkLogin() {
-  if (!showCredentials()) {
+  var code = getParam('code', '')
+  if (code == "") {
     if ("colladmin-refresh" in localStorage) {
+      console.log("try refresh token");
       doRefreshLogin();
     } else {
-      doCodeLogin();
+      console.log("no refresh token found");
     }
+    return;
   }
+  console.log("code present... clear refresh token");
+  localStorage.removeItem(LS_REFRESH);
+  doCodeLogin(code);
 }
 
 /*
  * Perform OAUTH login using authorization_code
  */
-function doCodeLogin() {
-  var code = getParam('code', '')
-  if (code == "") {
-    return;
-  }
+function doCodeLogin(code) {
   $.ajax({
     dataType: "json",
     method: "POST",
@@ -160,6 +162,7 @@ function doCodeLogin() {
     success: function(data) {
       console.log("code success");
       updateCredentials(data);
+      document.location = document.location.pathname;
     },
     error: function( xhr, status ) {
       console.log("code fail");
@@ -186,21 +189,19 @@ function doRefreshLogin() {
     success: function(data) {
       console.log("refresh success");
       updateCredentials(data);
+      console.log("sleep then update credentials")
+      setTimeout(function(){showCredentials(0)}, 1000);
     },
     error: function( xhr, status ) {
       console.log("refresh fail");
       $("#message").val(xhr.responseText);
       localStorage.removeItem(LS_REFRESH);
-      doCodeLogin();
+      showCredentials(0);
     }
   });
 
 }
 
-// jQuery page load logic
-$(document).ready(function(){
- checkLogin();
-});
 
 // Redirect to login page
 function goToLogin() {
