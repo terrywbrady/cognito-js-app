@@ -1,12 +1,28 @@
 /*
- *The following values will be imported from app-ids.js
- */
+  Workflow
+  - User clicks login
+  - Return to page with "code" authorization (in URL param)
+  - Perform OAUTH code login (POST request)
+  - Save refresh token to browser local storage
+  - Redirect to page without "code" in URL param
+    - Not necessary, but the code token is a one time token
+  - OAUTH Reauthenticate from refresh token (POST request)
+  - Create CognitoIdentityCredentials object
+  - Note that there is a slight delay for the authentication to complete
+  - Set 1 second timer, then display credentials (may retry 5 times)
+  - Verify credentials (AWS.config.getCredentials)
+  - Call AWS.STS().getCallerIdentity() in order to display the Role ARN for the session
+  - Call AWS.S3().getObject() to download a text file (if access is permitted)
+  - Call AWS.Lambda.invoke() to call a function (if access is permitted)
 
- // var CLIENT = "xxxxxxxxxxxxxxxxxxxxxxxxxx"; //app client id
-// var DOM = "https://XXXXXXXXX.auth.us-west-2.amazoncognito.com/"; // hosted ui domain id
-// var REDIR = "http://localhost:8887/index.html?logged-in";
-// var IDPOOL = "us-west-2:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"; // cognito id pool id
-// var USERPOOL = "us-west-2_XXXXXXXX"; // user pool id
+  The following values will be imported from app-ids.js
+ 
+  var CLIENT = "xxxxxxxxxxxxxxxxxxxxxxxxxx"; //app client id
+  var DOM = "https://XXXXXXXXX.auth.us-west-2.amazoncognito.com/"; // hosted ui domain id
+  var REDIR = "http://localhost:8887/index.html?logged-in";
+  var IDPOOL = "us-west-2:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"; // cognito id pool id
+  var USERPOOL = "us-west-2_XXXXXXXX"; // user pool id
+ */
 
 /*
  * Values derived from the identifiers defined in app.js
@@ -18,6 +34,7 @@ var DOMSUFF = "?client_id=" + CLIENT +
     REDIR;
 var LOGIN = DOM + "/login" + DOMSUFF;
 var LOGOUT = DOM + "/logout" + DOMSUFF;
+const ACCT = /:\d{12,12}:/g;
 
 // Local storage key fro the refresh token
 var LS_REFRESH = 'colladmin-refresh';
@@ -47,6 +64,10 @@ function getParam(name, def) {
   return (name in p) ? p[name] : def;
 }
 
+function sanitizeAccount(s) {
+  return s.replaceAll(ACCT, ":000000000000:");
+}
+
 // Display the currently active credentials for the user's session
 // Display a hash code for the refresh token
 function showCredentials(attempt) {
@@ -72,9 +93,10 @@ function showCredentials(attempt) {
           $("#message").val(err2);
         } else {
           console.log(data);
-          $("#account").val(data['Account']);
-          $("#role").val(data['Arn']);
+          $("#account").val(sanitizeAccount(data['Account']));
+          $("#role").val(sanitizeAccount(data['Arn'].replaceAll("/", "\n")));
           try_s3();
+          try_lambda();
         }
       });
     }
@@ -87,11 +109,11 @@ function try_s3() {
     Bucket: BUCKET, 
     Key: "hi.txt"
   };
-  $("#s3down").text("");
+  $("#s3down,#s3-message").text("");
   s3.getObject(params, function(err, data) {
     if (err) {
       //console.log(err.stack);
-      $("#message").val(err + " accessing S3 content");
+      $("#s3-message").val(sanitizeAccount(err.message) + " accessing S3 content");
     } else {
       var arr = data.Body.buffer;
       var body = new TextDecoder().decode(arr);
@@ -99,6 +121,24 @@ function try_s3() {
       $("#s3down").text(body);
     }
   });
+}
+
+function try_lambda() {
+  $("#lambda,#lambda-message").text("");
+  var params = {
+    FunctionName: LAMBDA, 
+    Payload: "{}",
+    Qualifier: "$LATEST"
+   };
+   var lambda = new AWS.Lambda();
+   lambda.invoke(params, function(err, data) {
+     if (err) {
+      $("#lambda-message").val(sanitizeAccount(err.message) + " accessing lambda");
+     } else {
+       var d = JSON.parse(data.Payload);
+      $("#lambda").val(d['body']);
+     } 
+   });
 }
 
 /*
@@ -218,6 +258,11 @@ function doLogout() {
 function goToLogout() {
   document.location = LOGOUT;
 }
+
+function details() {
+  $("p.detail").toggle();
+}
+
 
 // Display a hash code of the refresh_token
 function showRefresh() {

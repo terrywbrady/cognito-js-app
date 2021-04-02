@@ -10,14 +10,17 @@ div.main {
     display: inline-block;
     width: 120px;
   }
-  div.main output {
+  div.main output, div.main textarea {
     background-color: #EEEEEE;
     display: inline-block;
     width: 400px;
     border: thin solid black;
   }
-  #message {
+  #message, div.main output.message {
     border: none;
     color: red;
     background-color: white;
+  }
+  p.detail {
+    display: none;
   }

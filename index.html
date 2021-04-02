@@ -15,33 +15,39 @@
     <div class="main">
       <fieldset>
         <legend>Credential Information</legend>
-        <p>
+        <p class="detail">
           <label for="expired">Expired</label>
           <output id="expired">&nbsp;</output>
         </p>
-        <p>
+        <p class="detail">
           <label for="expires">Expires</label>
           <output id="expires">&nbsp;</output>
         </p>
-        <p>
+        <p class="detail">
           <label for="account">Account</label>
           <output id="account">&nbsp;</output>
         </p>
         <p>
           <label for="role">Role</label>
-          <output id="role">&nbsp;</output>
+          <textarea rows="3" readonly id="role">&nbsp;</textarea>
         </p>
-        <p>
+        <p class="detail">
           <label for="identity">Identity</label>
           <output id="identity">&nbsp;</output>
         </p>
-         <p>
+         <p class="detail">
           <label for="refresh">Refresh Token Hash</label>
           <output id="refresh">&nbsp;</output>
         </p>
         <p>
           <label for="s3down">s3 Downloaded:</label>
           <output id="s3down">&nbsp;</output>
+          <output class="message" id="s3-message">&nbsp;</output>
+        </p>
+        <p>
+          <label for="lambda">Lambda:</label>
+          <output id="lambda">&nbsp;</output>
+          <output class="message" id="lambda-message">&nbsp;</output>
         </p>
         <p>
           <output id="message">&nbsp;</output>
@@ -49,6 +55,7 @@
         <button onclick="showCredentials();">Refresh</button>
         <button onclick="goToLogin();">Login</button>
         <button onclick="doLogout();">Logout</button>
+        <button onclick="details();">Details</button>
       </fieldset>
     </div>
   </body>
