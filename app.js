@@ -34,7 +34,7 @@ var DOMSUFF = "?client_id=" + CLIENT +
     REDIR;
 var LOGIN = DOM + "/login" + DOMSUFF;
 var LOGOUT = DOM + "/logout" + DOMSUFF;
-const ACCT = /:\d{12,12}:/g;
+const ACCT = /\d{12,12}/g;
 
 // Local storage key fro the refresh token
 var LS_REFRESH = 'colladmin-refresh';
@@ -65,7 +65,7 @@ function getParam(name, def) {
 }
 
 function sanitizeAccount(s) {
-  return s.replaceAll(ACCT, ":000000000000:");
+  return s.replaceAll(ACCT, "000000000000");
 }
 
 // Display the currently active credentials for the user's session
