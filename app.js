@@ -29,11 +29,14 @@
  */
 var USERIDP = "cognito-idp.us-west-2.amazonaws.com/" + USERPOOL;
 var OAUTH = DOM + "oauth2/token";
-var DOMSUFF = "?client_id=" + CLIENT + 
-    "&response_type=code&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=" + 
+// Set &response_type=token for an implict grant
+var DOMSUFF = "?client_id=" + CLIENT + "&response_type=code" +
+    "&scope=aws.cognito.signin.user.admin+email+openid+phone+profile&redirect_uri=" + 
     REDIR;
 var LOGIN = DOM + "/login" + DOMSUFF;
 var LOGOUT = DOM + "/logout" + DOMSUFF;
+
+var STORE_REFRESH = false; 
 const ACCT = /\d{12,12}/g;
 
 // Local storage key fro the refresh token
@@ -42,28 +45,9 @@ var LS_REFRESH = 'colladmin-refresh';
 // jQuery page load logic
 $(document).ready(function(){
   checkLogin();
- });
+});
  
-
-// Simple parser to pull GET parameters
-function getParams(){
-  var queries = {};
-  if (document.location.search == "") {
-    return queries;
-  }
-  $.each(document.location.search.substr(1).split('&'),function(c,q){
-    var i = q.split('=');
-    queries[i[0]] = i[1];
-  });
-  return queries;
-}
-
-// Retrieve a GET parameter or return a default value
-function getParam(name, def) {
-  var p = getParams();
-  return (name in p) ? p[name] : def;
-}
-
+// Sanitize AWS account from display
 function sanitizeAccount(s) {
   return s.replaceAll(ACCT, "000000000000");
 }
@@ -149,9 +133,6 @@ function updateCredentials(data) {
   AWS.config.region = 'us-west-2'; 
   var logins = {};
   logins[USERIDP] = data['id_token'];
-  if ('refresh_token' in data) {
-    localStorage[LS_REFRESH] = data['refresh_token'];
-  }
 
   var params = {
     IdentityPoolId: IDPOOL,
@@ -159,10 +140,32 @@ function updateCredentials(data) {
   };
 
   // Get the credentials from the identity pool
-
-  AWS.config.credentials = new AWS.CognitoIdentityCredentials(params);
-  
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials(params);  
 } 
+
+/*
+ * Get a named parameter from a URL hash string (used in implicit grant)
+ */
+function hashParam(key, defval) {
+  if (!window.location.hash) return defval;
+  if (window.location.hash.length < 1) return defval;
+  var sp = new URLSearchParams(window.location.hash.substr(1));
+  var v = sp.get(key);
+  if (v) return v;
+  return defval;
+}
+
+/*
+ * Get a named parameter from a URL query string (used in implicit grant)
+ */
+function queryParam(key, defval) {
+  if (!window.location.search) return defval;
+  var sp = new URLSearchParams(window.location.search);
+  var v = sp.get(key);
+  if (v) return v;
+  return defval;
+}
+
 
 /*
  * Check log in state on page refresh
@@ -170,9 +173,16 @@ function updateCredentials(data) {
  * - If a code parameter has been passed to the page, use that (authorization_code grant) 
  */
 function checkLogin() {
-  var code = getParam('code', '')
+  // if the implicit grant is enabled
+  var id_token = hashParam("id_token", "na");
+  if (id_token != "na") {
+    doImplicitLogin(id_token);
+    return;
+  }
+
+  var code = queryParam('code', '')
   if (code == "") {
-    if ("colladmin-refresh" in localStorage) {
+    if ("colladmin-refresh" in localStorage && STORE_REFRESH) {
       console.log("try refresh token");
       doRefreshLogin();
     } else {
@@ -180,8 +190,10 @@ function checkLogin() {
     }
     return;
   }
-  console.log("code present... clear refresh token");
-  localStorage.removeItem(LS_REFRESH);
+  if (STORE_REFRESH) {
+    console.log("code present... clear refresh token");
+    localStorage.removeItem(LS_REFRESH);
+  }
   doCodeLogin(code);
 }
 
@@ -202,13 +214,38 @@ function doCodeLogin(code) {
     success: function(data) {
       console.log("code success");
       updateCredentials(data);
-      document.location = document.location.pathname;
+      if (STORE_REFRESH) {
+        localStorage[LS_REFRESH] = data['refresh_token'];
+        document.location = document.location.pathname;
+      } else {
+        setTimeout(function(){showCredentials(0)}, 1000);
+      }
     },
     error: function( xhr, status ) {
       console.log("code fail");
       $("#message").val(xhr.responseText);
     }
   });
+
+}
+
+/*
+ * Perform OAUTH login using authorization_code
+ */
+function doImplicitLogin(token) {
+  AWS.config.region = 'us-west-2'; 
+  var logins = {};
+  logins[USERIDP] = token;
+
+  var params = {
+    IdentityPoolId: IDPOOL,
+    Logins: logins,
+  };
+
+  // Get the credentials from the identity pool
+
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials(params);
+  setTimeout(function(){showCredentials(0)}, 1000);
 
 }
 
@@ -250,7 +287,9 @@ function goToLogin() {
 
 // Clear refresh token and redirect to logout page
 function doLogout() {
-  localStorage.removeItem(LS_REFRESH);
+  if (STORE_REFRESH) {
+    localStorage.removeItem(LS_REFRESH);
+  }
   goToLogout();
 }
 
@@ -266,7 +305,7 @@ function details() {
 
 // Display a hash code of the refresh_token
 function showRefresh() {
-  if (LS_REFRESH in localStorage) {
+  if (LS_REFRESH in localStorage && STORE_REFRESH) {
     var token = localStorage[LS_REFRESH];
     //https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
     var hash = 0, i = 0, len = token.length;
