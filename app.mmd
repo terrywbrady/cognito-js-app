@@ -15,7 +15,7 @@ sequenceDiagram
     Browser->>AWS_SecurityTokenService: AWS.STS().getCallerIdentity
     AWS_SecurityTokenService->>Browser: AWS Role ARN (using AWS credentials)
     Browser->Browser: Display AWS Role ARN
-    Brwoser->S3: Retrieve Object  (using AWS credentials)
+    Browser->S3: Retrieve Object  (using AWS credentials)
     S3->>Browser: Object Content
     Browser->Browser: Display Object Content
     Browser->Lambda: Invoke Lambda  (using AWS credentials)
