@@ -98,3 +98,4 @@ Copy `app-ids.template.js` to `app-ids.js`.  As you create AWS objects, save tho
     - One or more UC SAML
   - Once authenticated via the identity pool, how do I assume an identity that can do real things in AWS?
     - How is this mapping performed?
+

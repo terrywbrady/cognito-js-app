@@ -1,1 +1,4 @@
 app-ids.js
+alb-intercept/.bundle
+alb-intercept/vendor
+alb-intercept/lambda.zip
