@@ -1,0 +1,24 @@
+sequenceDiagram
+    Browser->>WebServer: retrieve assets
+    Browser->>Browser: click login button
+    Browser->>Browser: Open Cognito Hosted UI
+    Browser-->>CogntioHostedUI (myapp.domain): Send Cookies
+    Browser->>CogntioHostedUI (myapp.domain): Provide login credentials
+    CogntioHostedUI (myapp.domain)->>CognitoUserPool: Authenticate User in User Pool 
+    CognitoUserPool->>CognitoUserPool: Evaluate User Group for User, Map to AWS Role
+    CognitoUserPool->>CogntioHostedUI (myapp.domain): User Authenticated
+    CogntioHostedUI (myapp.domain)->>Browser: Redirect to app with authentication Code (Code Grant)
+    Browser->>OAUTHServer (myapp.domain): POST oauth2/token
+    OAUTHServer (myapp.domain)->>Browser: return id_token
+    Browser->>CognitoUserPool: create new AWS.CognitoIdentityCredentials using id_token
+    CognitoUserPool->>Browser: AWS Credentials Object
+    Browser->>AWS_SecurityTokenService: AWS.STS().getCallerIdentity
+    AWS_SecurityTokenService->>Browser: AWS Role ARN (using AWS credentials)
+    Browser->Browser: Display AWS Role ARN
+    Brwoser->S3: Retrieve Object  (using AWS credentials)
+    S3->>Browser: Object Content
+    Browser->Browser: Display Object Content
+    Browser->Lambda: Invoke Lambda  (using AWS credentials)
+    Lambda->>Browser: Lambda response payload
+    Browser->Browser: Display Lambda response payload
+

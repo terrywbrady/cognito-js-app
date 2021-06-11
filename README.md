@@ -1,5 +1,7 @@
 # Create JS Client to Perform a Login to a Cognito User Pool
 
+![Sequence Diagram](app.mmd.svg)
+
 ## Setup
 
 ### Clone this repo.
