@@ -1,47 +1,68 @@
 require 'json'
 require 'jwt'
 
-def HashToHTML(hash, opts = {})
-  return if !hash.is_a?(Hash)
-
-  indent_level = opts.fetch(:indent_level) { 0 }
-
-  out = " " * indent_level + "<ul>\n"
-
-  hash.each do |key, value|
-    out += " " * (indent_level + 2) + "<li><strong>#{key}:</strong>"
-
-    if value.is_a?(Hash)
-      out += "\n" + HashToHTML(value, :indent_level => indent_level + 2) + " " * (indent_level + 2) + "</li>\n"
-    else
-      out += " <span>#{value}</span></li>\n"
+def lambda_handler(event:, context:)
+  token = event.fetch('headers',{}).fetch('x-amzn-oidc-accesstoken','')
+  rxpath = %r[.*/(web/.*\.([^\.]*))$]
+  path = event.fetch('path', '')
+  mpath = rxpath.match(path)
+  reqresp = { 
+      statusCode: 200, 
+      headers: {'Content-Type' => 'text'},
+      body: 'No action' 
+  }
+  if token.empty?
+    reqresp = error(401, "Unauthorized: No user token in header ")
+  else
+    begin
+      jtoken = JWT.decode(token, nil, false, { :algorithm => 'RS256' })
+      #resp = jtoken
+      username = "User token found for #{jtoken[0].fetch('username', '')}"
+      groups = jtoken[0].fetch("cognito:groups", [])
+      if groups.length == 0
+        reqresp = error(401, "Unauthorized: No groups for user: #{username}")
+      elsif mpath 
+        reqresp = web_assets(mpath[1], mpath[2])
+      else
+        reqresp = { 
+          statusCode: 200, 
+          headers: {'Content-Type' => 'application/json'},
+          body: {
+            message: "User #{username} in groups #{groups.join(',')}",
+            path: path,
+            event: event
+          }.to_json
+        }
+      end
+    rescue => e
+      reqresp = error(500, "ERROR: #{e.message}")
     end
   end
-
-  out += " " * indent_level + "</ul>\n"
+  reqresp
 end
 
-def lambda_handler(event:, context:)
-    token = event.fetch('headers',{}).fetch('x-amzn-oidc-accesstoken','')
-    resp = {message: 'hello'}
-    if !token.empty?
-      begin
-        jtoken = JWT.decode(token, nil, false, { :algorithm => 'RS256' })
-        #resp = jtoken
-        resp['group'] = jtoken[0].fetch("cognito:groups", [])
-      rescue => e
-        resp['message'] = e.message
-      end
-    end
-    { statusCode: 200, 
-      headers: {'Content-Type' => 'application/json'},
-      body: resp.to_json 
-    }
+def content_type(ext)
+  return "text/html" if ext == "html" || ext == "htm"
+  return "text/javascript" if ext == "js"
+  return "text/css" if ext == "css"
+  nil
 end
 
-def lambda_handler2(event:, context:)
-    { statusCode: 200, 
-      headers: {'Content-Type' => 'text/html'},
-      body: "<html><body><h1>hello from lambda</h1><br/>#{HashToHTML(event)}</body><?html>" 
-    }
+def web_assets(path, ext)
+  return error(404, "File not found #{path}") unless File.file?(path)
+  ctype = content_type(ext)
+  return error(404, "Unsupported content type #{ext}") unless ctype
+  { 
+    statusCode: 200, 
+    headers: {'Content-Type' => ctype},
+    body: File.open(path).read
+  }
+end
+
+def error(status, message)
+  { 
+    statusCode: status, 
+    headers: {'Content-Type' => 'text'},
+    body: message 
+  }
 end

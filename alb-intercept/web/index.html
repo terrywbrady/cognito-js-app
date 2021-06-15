@@ -1,0 +1,23 @@
+<html>
+    <header>
+        <title>Test Lambda Page</title>
+        <script	src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $.ajax({
+                    url: 'account/test',
+                    success: function(data){
+                        $("#res").text(data['message']);
+                    }
+                });
+            });
+        </script>
+    </header>
+    <body>
+        <h1>Test Lambda Page</h1>
+        <h2 id="res"></h2>
+        <p>This is a test.</p>
+        <a href="">Login</a>
+        <a href="">Logout</a>
+    </body>
+</html>
