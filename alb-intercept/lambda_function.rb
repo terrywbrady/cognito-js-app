@@ -21,6 +21,19 @@ def lambda_handler(event:, context:)
       groups = jtoken[0].fetch("cognito:groups", [])
       if groups.length == 0
         reqresp = error(401, "Unauthorized: No groups for user: #{username}")
+      elsif path == '/account/logout' 
+        reqresp = { 
+          statusCode: 303, 
+          headers: {
+            'Location': ENV.fetch('LOGOUT_URI', '.'),
+            'Set-Cookie': "AWSELBAuthSessionCookie-0=; path=/; HttpOnly"
+          }
+        }
+      elsif path == '/account/login' 
+        reqresp = { 
+          statusCode: 303, 
+          headers: {'Location' => ENV.fetch('LOGIN_URI', '.')}
+        }
       elsif mpath 
         reqresp = web_assets(mpath[1], mpath[2])
       else
