@@ -2,6 +2,11 @@
 
 [Sequence Diagram](https://raw.githubusercontent.com/terrywbrady/cognito-js-app/main/app.mmd.svg)
 
+_To update the SVG_
+```
+docker run --rm -v "$(pwd):/data" -w /data minlag/mermaid-cli:8.9.3-1 mmdc -i app.mmd
+```
+
 ## Setup
 
 ### Clone this repo.
