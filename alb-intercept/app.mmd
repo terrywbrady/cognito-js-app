@@ -1,0 +1,20 @@
+sequenceDiagram
+    Browser->>ALB: Request web assets
+    ALB->>ALB: Check for AWSELBAuthSessionCookie* cookie
+    ALB->>Browser: Redirect to Cognito Hosted UI
+    Browser->>CogntioHostedUI: Provide login credentials
+    CogntioHostedUI->>CognitoUserPool: Authenticate User in User Pool 
+    CognitoUserPool->>CogntioHostedUI: User Authenticated, return cookies AWSELBAuthSessionCookie*
+    CogntioHostedUI->>Browser: Redirect to ALB with credentials in x-amzn-oidc-accesstoken header
+    ALB->>Lambda: Request web assets /web/...
+    Lambda->>Lambda: Parse JWT token to verify user groups, check authorization
+    Lambda->>Browser: Return 401 if unauthorized
+    Lambda->>Browser: Return web assets is authorized
+    Browser->>ALB: Ajax request for Lambda + x-amzn-oidc-accesstoken header
+    ALB->>ALB: Check for AWSELBAuthSessionCookie* cookie
+    ALB->>Lambda: Invoke lambda function
+    Lambda->>Lambda: Parse JWT token to verify user groups, check authorization
+    Lambda->>Browser: Return 401 if unauthorized
+    Lambda->>Browser: Return json payload if authorized
+    Browser->>Browser: User clicks logout button, javascript deletes AWSELBAuthSessionCookie*, return redirect header
+    Browser->>CogntioHostedUI: User is redirected to Cognito Hosted UI for new login
