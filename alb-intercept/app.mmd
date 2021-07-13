@@ -1,11 +1,12 @@
 sequenceDiagram
-    Browser->>ALB: Request web assets
+    Browser->>ALB: Request web assets (no credentials)
     ALB->>ALB: Check for AWSELBAuthSessionCookie* cookie
     ALB->>Browser: Redirect to Cognito Hosted UI
     Browser->>CogntioHostedUI: Provide login credentials
     CogntioHostedUI->>CognitoUserPool: Authenticate User in User Pool 
     CognitoUserPool->>CogntioHostedUI: User Authenticated, return cookies AWSELBAuthSessionCookie*
     CogntioHostedUI->>Browser: Redirect to ALB with credentials in x-amzn-oidc-accesstoken header
+    Browser->>ALB: Request web assets with credentials in x-amzn-oidc-accesstoken header
     ALB->>Lambda: Request web assets /web/...
     Lambda->>Lambda: Parse JWT token to verify user groups, check authorization
     Lambda->>Browser: Return 401 if unauthorized
