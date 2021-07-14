@@ -5,15 +5,15 @@ sequenceDiagram
     Browser->>CogntioHostedUI: Provide login credentials
     CogntioHostedUI->>CognitoUserPool: Authenticate User in User Pool 
     CognitoUserPool->>CogntioHostedUI: User Authenticated, return cookies AWSELBAuthSessionCookie*
-    CogntioHostedUI->>Browser: Redirect to ALB with credentials in x-amzn-oidc-accesstoken header
-    Browser->>ALB: Request web assets with credentials in x-amzn-oidc-accesstoken header
-    ALB->>Lambda: Request web assets /web/...
+    CogntioHostedUI->>Browser: Redirect to AWSELBAuthSessionCookie
+    Browser->>ALB: Request web assets with cookie
+    ALB->>Lambda: Request web assets /web/... (credentials passed as JWT in x-amzn-oidc-accesstoken header)
     Lambda->>Lambda: Parse JWT token to verify user groups, check authorization
     Lambda->>Browser: Return 401 if unauthorized
     Lambda->>Browser: Return web assets is authorized
-    Browser->>ALB: Ajax request for Lambda + x-amzn-oidc-accesstoken header
+    Browser->>ALB: Ajax request for Lambda + cookie
     ALB->>ALB: Check for AWSELBAuthSessionCookie* cookie
-    ALB->>Lambda: Invoke lambda function
+    ALB->>Lambda: Invoke lambda function (credentials passed as JWT in x-amzn-oidc-accesstoken header)
     Lambda->>Lambda: Parse JWT token to verify user groups, check authorization
     Lambda->>Browser: Return 401 if unauthorized
     Lambda->>Browser: Return json payload if authorized
